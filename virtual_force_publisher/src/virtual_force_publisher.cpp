@@ -210,7 +210,7 @@ namespace virtual_force_publisher{
 		}
 		for (unsigned int j=0; j<3; j++){
 		  F_pub.force[j] = transform.getBasis()[j].dot(tf_force);
-		  F_pub.torque[j] = transform.getBasis()[j].dot(tf_torque);
+		  F_pub.torque[j] = transform.getBasis()[j].dot(tf_torque)+transform.getOrigin().cross(tf_force)[j];
 		}
 
                 geometry_msgs::WrenchStamped msg;

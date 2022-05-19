@@ -13,7 +13,11 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS})
 add_executable(virtual_force_publisher src/virtual_force_publisher.cpp)
+add_executable(test_virtual_force_publisher src/test_virtual_force_publisher.cpp)
+add_executable(test_wrong_virtual_force_publisher src/test_virtual_force_publisher.cpp)
 target_link_libraries(virtual_force_publisher ${catkin_LIBRARIES})
+target_link_libraries(test_virtual_force_publisher ${catkin_LIBRARIES})
+target_link_libraries(test_wrong_virtual_force_publisher ${catkin_LIBRARIES})
 
 # From https://github.com/jsk-ros-pkg/jsk_recognition/pull/2345
 # Install header files directly into ${CATKIN_PACKAGE_INCLUDE_DESTINATION}.

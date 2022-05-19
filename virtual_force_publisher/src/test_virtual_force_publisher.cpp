@@ -141,9 +141,9 @@ namespace virtual_force_publisher{
 		Eigen::Matrix<double,Eigen::Dynamic,6> jac_t;
 		Eigen::Matrix<double,6,Eigen::Dynamic> jac_t_pseudo_inv;
 		tf::StampedTransform transform, inverse_transform;
-		KDL::Wrench    F_pub, F_inverse;
-		tf::Vector3 tf_force, tf_pub_force;
-		tf::Vector3 tf_torque, tf_pub_torque;
+		KDL::Wrench    F_pub, F_inverse, hoge;
+		tf::Vector3 tf_force, tf_pub_force, tf_inverse_force;
+		tf::Vector3 tf_torque, tf_pub_torque, tf_inverse_torque;
 
                 tau.resize(chain_.getNrOfJoints());
 
@@ -213,12 +213,14 @@ namespace virtual_force_publisher{
 		}
 		for (unsigned int j=0; j<3; j++){
 		  F_pub.force[j] = transform.getBasis()[j].dot(tf_force);
-		  F_pub.torque[j] = transform.getBasis()[j].dot(tf_torque)+transform.getOrigin().cross(tf_force)[j];
 		}
+		tf::vectorKDLToTF(F_pub.force, tf_pub_force);
+        for (unsigned int j=0; j<3; j++){
+          F_pub.torque[j] = transform.getBasis()[j].dot(tf_torque)+transform.getOrigin().cross(tf_pub_force)[j];
+        }
+		tf::vectorKDLToTF(F_pub.torque, tf_pub_torque);
 
 		//tf inverse transformation
-		tf::vectorKDLToTF(F_pub.force, tf_pub_force);
-		tf::vectorKDLToTF(F_pub.torque, tf_pub_torque);
 		try{
 		  listener_.waitForTransform( root, tip, state->header.stamp, ros::Duration(1.0));
 		  listener_.lookupTransform( root, tip, state->header.stamp , inverse_transform);
@@ -229,10 +231,56 @@ namespace virtual_force_publisher{
 		}
 		for (unsigned int j=0; j<3; j++){
 		  F_inverse.force[j] = inverse_transform.getBasis()[j].dot(tf_pub_force);
-		  F_inverse.torque[j] = inverse_transform.getBasis()[j].dot(tf_pub_torque)+inverse_transform.getOrigin().cross(tf_pub_force)[j];
+		}
+		tf::vectorKDLToTF(F_inverse.force, tf_inverse_force);
+        for (unsigned int j=0; j<3; j++){
+          F_inverse.torque[j] = inverse_transform.getBasis()[j].dot(tf_pub_torque)+inverse_transform.getOrigin().cross(tf_inverse_force)[j];
+        }
+		tf::vectorKDLToTF(F_inverse.torque, tf_inverse_torque);
+
+
+        std::cout << std::endl;
+        
+        std::cout << "origin" << std::endl;
+		for (unsigned int j=0; j<3; j++){
+          // std::cout << std::fixed << std::setw(8) << std::setprecision(4) << inverse_transform.getOrigin()[j] << " ";
+          std::cout << std::fixed << std::setw(8) << std::setprecision(4) << transform.getOrigin()[j] << " ";
+          // std::cout << std::fixed << std::setw(8) << std::setprecision(4) << inverse_transform.getOrigin().cross(tf_pub_force)[j] << " ";
+		}
+        
+        std::cout << std::endl;
+        std::cout << "force" << std::endl;
+		for (unsigned int j=0; j<3; j++){
+          std::cout << std::fixed << std::setw(8) << std::setprecision(4) << tf_pub_force[j] << " ";
 		}
 
-        std::cout << "F:"<< F.torque[0]<< "F_inverse:" << F_inverse.torque[0] << std::endl;
+        std::cout << std::endl;
+        std::cout << "rot*torque" << std::endl;
+		for (unsigned int j=0; j<3; j++){
+          std::cout << std::fixed << std::setw(8) << std::setprecision(4) << hoge.torque[j] << " ";
+		}
+        
+
+
+        std::cout << std::endl;
+
+        std::cout << "cross" << std::endl;
+		for (unsigned int j=0; j<3; j++){
+          std::cout << std::fixed << std::setw(8) << std::setprecision(4) << transform.getOrigin().cross(tf_pub_force)[j] << " ";
+          // std::cout << std::fixed << std::setw(8) << std::setprecision(4) << tf_force.cross(transform.getOrigin())[j] << " ";          
+		}
+
+        std::cout << std::endl;
+        std::cout << "torque" << std::endl;
+		for (unsigned int j=0; j<3; j++){
+          std::cout << std::fixed << std::setw(8) << std::setprecision(4) << F_pub.torque[j] << " ";
+		}
+        
+
+        std::cout << std::endl;
+        
+        
+        // std::cout << "F:"<< F.torque[0]<< "F_inverse:" << F_inverse.torque[0] << std::endl;
                 geometry_msgs::WrenchStamped msg;
                 msg.header.stamp = state->header.stamp;
                 msg.header.frame_id = root;
